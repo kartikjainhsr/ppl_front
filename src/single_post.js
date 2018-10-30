@@ -2,6 +2,8 @@
 import React, {Component} from 'react';
 import Header from './header';
 import Footer from './footer';
+import Timeline_Right from './timeline_right';
+import Upload_Post from './upload_post';
 
 var flag = {comment : false};
 
@@ -10,9 +12,22 @@ class Single_Post extends Component {
 
     constructor(props){
         super(props);
-        this.state = {pos : '',load : true, load2 : true, hasSubmit : false, comment : '' , comments : ''};
+        this.state = {isUpload : false, load3 : true, pos : '',load : true, load2 : true, hasSubmit : false, comment : '' , comments : '', cate : ''};
         this.post_handler();
         this.fetch_comment();
+        this.category_handler();
+    }
+
+    changeUpload = () => {
+      this.setState({isUpload : this.state.isUpload ? false : true});
+      this.category_handler();
+      this.post_handler();
+      
+    }
+  
+    showUpload = () => {
+      if(this.state.isUpload)
+      return(<Upload_Post changeUpload = {this.changeUpload} cate = {this.state.cate}/>)
     }
 
 
@@ -182,9 +197,42 @@ class Single_Post extends Component {
       }
 
 
+      category_handler = () => {
+        var opt = {
+            headers : {'Accept' : 'application/json','Content-Type':'application/json'},
+            method: "POST",
+            body :  JSON.stringify({})
+            }
+        fetch("http://localhost:5000/fetch_category", opt)
+            .then((response) => {
+                if (response.status == 200 || response.status == 0) {
+                    response.text().then((action)=>
+                    {
+                        const a = JSON.parse(action);
+                        if(a.re == 'ok')
+                        {
+                             this.setState({cate : a.body});
+                             this.setState({load3 : false});
+                        }
+                        else
+                        {
+                            this.props.history.push('/error');
+                        }
+                    })
+                
+            }
+            })
+    
+    
+            .catch((err) => {
+                this.props.history.push('/error');
+            });
+    }
+
+
 
     render(){
-        if(this.state.load2 || this.state.load)
+        if(this.state.load2 || this.state.load || this.state.load3)
         return(<div></div>)
         else
         return(<div>
@@ -226,46 +274,10 @@ class Single_Post extends Component {
   <Header />
   <div className="container">
     <div className="content">
-      <div className="content_rgt">
-        <div className="rght_btn"> <span className="rght_btn_icon"><img src="images/btn_iconb.png" alt="up" /></span> <span className="btn_sep"><img src="images/btn_sep.png" alt="sep" /></span> <a href="#">Upload Post</a> </div>
-        <div className="rght_btn"> <span className="rght_btn_icon"><img src="images/btn_icona.png" alt="up" /></span> <span className="btn_sep"><img src="images/btn_sep.png" alt="sep" /></span> <a href="#">Invite Friends</a> </div>
-        <div className="rght_cate">
-          <div className="rght_cate_hd" id="rght_cat_bg">Categories</div>
-          <div className="rght_list">
-            <ul>
-              <li><a href="#"><span className="list_icon"><img src="images/icon_01.png" alt="up" /></span> CATS</a></li>
-              <li><a href="#"><span className="list_icon"><img src="images/icon_02.png" alt="up" /></span> Dogs</a></li>
-              <li><a href="#"><span className="list_icon"><img src="images/icon_03.png" alt="up" /></span> Birds</a></li>
-              <li><a href="#"><span className="list_icon"><img src="images/icon_04.png" alt="up" /></span> Rabbit</a></li>
-              <li><a href="#"><span className="list_icon"><img src="images/icon_05.png" alt="up" /></span> Others</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="rght_cate">
-          <div className="rght_cate_hd" id="opn_cat_bg">Featured</div>
-          <div className="sub_dwn">
-            <div className="feat_sec">
-              <div className="feat_sec_img"><img src="images/feat_img1.png" alt="image" /></div>
-              <div className="feat_txt">Lorem Ipusum Text</div>
-            </div>
-            <div className="feat_sec">
-              <div className="feat_sec_img"><img src="images/feat_img2.png" alt="image" /></div>
-              <div className="feat_txt">Lorem Ipusum Text</div>
-              <div className="btm_rgt">
-                <div className="btm_arc">Dogs</div>
-              </div>
-            </div>
-            <div className="feat_sec">
-              <div className="feat_sec_img"><img src="images/feat_img3.png" alt="image" /></div>
-              <div className="feat_txt">Lorem Ipusum Text</div>
-              <div className="btm_rgt">
-                <div className="btm_arc">Rabbits</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    
+    <Timeline_Right cate = {this.state.cate} changeUpload = {this.changeUpload}  category_handler = {this.category_handler}/>
       <div className="content_lft">
+      {this.showUpload()}
       {
         this.state.pos.map((pos) =>
         { 
