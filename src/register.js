@@ -1,6 +1,7 @@
 /* eslint-disable */
 import React , {Component} from 'react';
 import {Link} from 'react-router-dom';
+import { connect } from 'react-redux';
 import Header from './header';
 import Footer from './footer';
 
@@ -10,27 +11,29 @@ class Register extends Component{
   constructor(props)
   {
     super(props);
-    this.state = {pop : false, email_exist : '', hasSubmit : false , flag : false, username : '',password : '', email : '' , fname : '', lname : '', vusername:''};
+    this.state = {pop : false, email_exist : '', hasSubmit : false , flag : false};
   }
 
 	changeData=(e)=>{
-    this.setState({ [e.target.name] : e.target.value});
+    
+    const data = {name : e.target.name, value : e.target.value};
+     this.props.change(data);
   }
  
   checkData=(val)=>{
-   if(this.state[val].length <= 0 && this.state.hasSubmit)
+   if(this.props[val].length <= 0 && this.state.hasSubmit)
     {
       flag[val] = false;
       return ('Please enter '+val);
     }
-    else if(this.state[val].length > 0)
+    else if(this.props[val].length > 0)
       flag[val] = true;
   }
   
   checkEmail = () => {
     const pattern = /[a-zA-Z0-9]+[\.]?([a-zA-Z0-9]+)?[\@][a-z]{3,9}[\.][a-z]{2,5}/g;
-    const result = pattern.test(this.state.email);
-    if(this.state.email.length <=0 && this.state.hasSubmit)
+    const result = pattern.test(this.props.email);
+    if(this.props.email.length <=0 && this.state.hasSubmit)
     {
       flag.email = false;
       return ('Please Enter Email');
@@ -47,17 +50,17 @@ class Register extends Component{
   }
 
   checkPassword = () => {
-    if(this.state.password.length <= 0 && this.state.hasSubmit)
+    if(this.props.password.length <= 0 && this.state.hasSubmit)
     {
       flag.password = false;
       return ('Please enter password');
     }
-    else if(this.state.password.length <= 7 && this.state.hasSubmit)
+    else if(this.props.password.length <= 7 && this.state.hasSubmit)
     {
       flag.password = false;
       return ('Please Enter password of atleast 8 digits');
     }
-    else if(this.state.password.length >=8)
+    else if(this.props.password.length >=8)
       flag.password = true;
   }
   pop2 = () => {
@@ -92,7 +95,7 @@ class Register extends Component{
       let option = {
         headers : {'Accept' : 'application/json','Content-Type':'application/json'},
         method : 'Post',
-        body : JSON.stringify(this.state)
+        body : JSON.stringify({username : this.props.username,password : this.props.password, email : this.props.email , fname : this.props.fname, lname : this.props.lname})
       }
       fetch("http://localhost:5000/register",option)
       .then((response)=>{
@@ -204,4 +207,21 @@ class Register extends Component{
 	}
 }
 
-export default Register;
+const mapStateToProps = (state) => {
+  return{
+    username : state.register.username,
+    password : state.register.password,
+    email : state.register.email,
+    fname : state.register.fname,
+    lname : state.register.lname
+  };
+}
+
+const mapDispatchToProps = (dispatch) => {
+  return{
+    change : (data) => dispatch({type : data.name, value : data.value})
+  };
+}
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(Register);

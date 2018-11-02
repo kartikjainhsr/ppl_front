@@ -2,6 +2,7 @@
 import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
 import {withRouter} from 'react-router-dom';
+import {connect} from 'react-redux';
 var flag = {category : false , image : false};
 class Upload_Category extends Component {
 
@@ -13,11 +14,15 @@ class Upload_Category extends Component {
 
     onDrop = (acceptedImage, rejectedImage) => {
         if(acceptedImage.length > 0)
-        this.setState({selectedImage : acceptedImage[0]});
+        {
+            const data = {name : 'selectedImage', value : acceptedImage[0]};
+            this.props.change(data);
+        }
     }
 
     changeData = (e) => {
-        this.setState({[e.target.name] : e.target.value});
+        const data = {name : e.target.name, value : e.target.value};
+        this.props.change(data);
     }
 
     checkCategory = () => {
@@ -28,8 +33,8 @@ class Upload_Category extends Component {
                     cate2.push(cat.category);
                 }
                 )
-        var index = cate2.indexOf(this.state.category);
-        if(this.state.category.length <=0 && this.state.hasSubmit)
+        var index = cate2.indexOf(this.props.category);
+        if(this.props.category.length <=0 && this.state.hasSubmit)
         {
             flag.category = false;
             return('Please enter Category');
@@ -39,7 +44,7 @@ class Upload_Category extends Component {
             flag.category = false;
             return('Category Should be Unique');
         }
-        else if(index == -1 && this.state.category.length > 0)
+        else if(index == -1 && this.props.category.length > 0)
         {
             flag.category = true;
             return('');
@@ -47,16 +52,22 @@ class Upload_Category extends Component {
     }
 
     checkImage = () => {
-        if(this.state.selectedImage == '' && this.state.hasSubmit)
+        if(this.props.selectedImage == '' && this.state.hasSubmit)
         {
             flag.image = false;
             return('Please select an image');
         }
-        else if(this.state.selectedImage !== '')
+        else if(this.props.selectedImage !== '')
         {
             flag.image = true;
             return('');
         }
+    }
+    clearState = () => {
+        let d = {name : 'category',value : ''};
+        this.props.change(d);
+        d = {name : 'selectedImage',value : ''};
+        this.props.change(d);
     }
 
     submitHandler = (e) => {
@@ -65,8 +76,8 @@ class Upload_Category extends Component {
         if(flag.category && flag.image)
         {
             let data = new FormData()
-        data.append("imageName" , this.state.selectedImage);
-        data.append("category" , this.state.category);
+        data.append("imageName" , this.props.selectedImage);
+        data.append("category" , this.props.category);
 
         var opt = {
             mode: 'no-cors',
@@ -81,6 +92,7 @@ class Upload_Category extends Component {
             .then((response) => {
                 if (response.status == 200 || response.status == 0) {
                             this.props.changeCategory();
+                            this.clearState();
                 }
                 else{
                     this.props.history.push('/error');
@@ -141,7 +153,7 @@ class Upload_Category extends Component {
             <Dropzone onDrop={this.onDrop} name='imageFile'>
                 <div>
                   <p>Click Here to Upload A Single Image</p>
-                  <img src={this.state.selectedImage.preview} />
+                  <img src={this.props.selectedImage.preview} />
                 </div>
               </Dropzone>
               <div style={{color : 'red'}}>{this.checkImage()}</div>
@@ -157,4 +169,18 @@ class Upload_Category extends Component {
 
 }
 
-export default withRouter(Upload_Category);
+const mapStateToProps = (state) => {
+    return{
+      selectedImage : state.upload_category.selectedImage,
+      category : state.upload_category.category
+    };
+  }
+  
+  const mapDispatchToProps = (dispatch) => {
+    return{
+      change : (data) => dispatch({type : data.name, value : data.value})
+    };
+  }
+  
+  
+  export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Upload_Category));
